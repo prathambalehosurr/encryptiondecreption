@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encryption & Decryption</title>
+</head>
+<body>
+    <h1>Encryption & Decryption Tool</h1>
+    <p>Secure your messages with encryption</p>
+    <div class="container">
+
+        <div class="input">
+            <label for="ip">Input text</label>
+            <input type="file" id="fileInput">
+            <textarea name="inputfield" id="ip" placeholder="Enter the text to encrypt or decrypt"></textarea>
+            
+
+        </div>
+
+        <div class="output">
+            <div class="lc">
+                <label for="op">
+                    Output text
+                </label>
+                <div class="copy">
+                    <button class="copy" id="copy">Copy</button>
+                </div>
+            </div>
+            <textarea name="outputfield" id="op" placeholder="Result will appear here..."></textarea>
+        </div>
+
+        <div class="buttons">
+            <button class="encrypt">Encrypt</button>
+            <button class="decrypt">Decrypt</button>
+            <button class="clearAll">Clear all</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
