@@ -44,9 +44,10 @@ h1,p{
     padding: 3px;
 }
 .buttons{
-    margin-left: 6%;
-    margin-right: 5px;
-    margin-top: -1%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
     background-color: white;
 }
 .encrypt, .decrypt , .clearAll{
