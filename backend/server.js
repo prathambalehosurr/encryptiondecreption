@@ -13,9 +13,6 @@ app.use(cors());
 app.use(express.json({ limit: "50mb" }));
 app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 
-// Serve static files from frontend
-app.use(express.static(path.join(__dirname, "../frontEnd")));
-
 // Configure multer for memory storage (better for serverless/Vercel)
 const storage = multer.memoryStorage();
 
@@ -25,14 +22,12 @@ const upload = multer({
 });
 
 
-// ENCRYPTION/DECRYPTION ALGORITHMS(i only have 4 at this time we willl add more here)
+// ENCRYPTION/DECRYPTION ALGORITHMS
 
 
-//AES-256 Encryption
-
+// AES-256 Encryption
 function encryptAES(text, secretKey) {
   try {
-    // Create a 32-byte key from the secret
     const key = crypto.scryptSync(secretKey, "salt", 32);
     const iv = crypto.randomBytes(16);
 
@@ -40,16 +35,13 @@ function encryptAES(text, secretKey) {
     let encrypted = cipher.update(text, "utf8", "hex");
     encrypted += cipher.final("hex");
 
-    // Return IV + encrypted data
     return iv.toString("hex") + ":" + encrypted;
   } catch (error) {
     throw new Error("AES Encryption failed: " + error.message);
   }
 }
 
-
-//AES-256 Decryption
-
+// AES-256 Decryption
 function decryptAES(encryptedData, secretKey) {
   try {
     const parts = encryptedData.split(":");
@@ -72,9 +64,7 @@ function decryptAES(encryptedData, secretKey) {
   }
 }
 
-
-//Caesar Cipher Encryption
-
+// Caesar Cipher Encryption
 function encryptCaesar(text, shift = 3) {
   return text
     .split("")
@@ -90,41 +80,35 @@ function encryptCaesar(text, shift = 3) {
     .join("");
 }
 
-
-//Caesar Cipher Decryption
-
+// Caesar Cipher Decryption
 function decryptCaesar(text, shift = 3) {
   return encryptCaesar(text, 26 - shift);
 }
 
-/**
- * Base64 Encoding
- */
+// Base64 Encoding
 function encryptBase64(text) {
   return Buffer.from(text, "utf8").toString("base64");
 }
 
-//Base64 Decoding
-
+// Base64 Decoding
 function decryptBase64(encodedText) {
   return Buffer.from(encodedText, "base64").toString("utf8");
 }
 
-//ROT13 Encryption/Decryption (same function for both)
-
+// ROT13 Encryption/Decryption (same function for both)
 function rot13(text) {
   return text.replace(/[a-zA-Z]/g, (char) => {
     const start = char <= "Z" ? 65 : 97;
     return String.fromCharCode(
-      start + ((char.charCodeAt(0) - start + 13) % 26),
+      start + ((char.charCodeAt(0) - start + 13) % 26)
     );
   });
 }
 
+
 // API ROUTES
 
 // Health check endpoint
-
 app.get("/api/health", (req, res) => {
   res.json({
     status: "OK",
@@ -133,8 +117,7 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-//Get available encryption methods
-
+// Get available encryption methods
 app.get("/api/methods", (req, res) => {
   res.json({
     methods: [
@@ -166,9 +149,7 @@ app.get("/api/methods", (req, res) => {
   });
 });
 
-
-//Encrypt text
-
+// Encrypt text
 app.post("/api/encrypt", (req, res) => {
   try {
     const { text, method = "aes", key, shift } = req.body;
@@ -228,8 +209,7 @@ app.post("/api/encrypt", (req, res) => {
   }
 });
 
-//Decrypt text
-
+// Decrypt text
 app.post("/api/decrypt", (req, res) => {
   try {
     const { text, method = "aes", key, shift } = req.body;
@@ -284,8 +264,7 @@ app.post("/api/decrypt", (req, res) => {
   }
 });
 
-//Encrypt file(works as of now but there are some issues with it)
-
+// Encrypt file
 app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
   try {
     if (!req.file) {
@@ -327,8 +306,6 @@ app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
         });
     }
 
-    // No cleanup needed for memory storage
-
     res.json({
       success: true,
       method: method,
@@ -343,8 +320,7 @@ app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
   }
 });
 
-//Decrypt file(same as encrypt file, it works as of now but there are some issues with it)
-
+// Decrypt file
 app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
   try {
     if (!req.file) {
@@ -386,8 +362,6 @@ app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
         });
     }
 
-    // No cleanup needed for memory storage
-
     res.json({
       success: true,
       method: method,
@@ -405,8 +379,8 @@ app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
 
 // ERROR HANDLING
 
-// 404 handler
-app.use((req, res) => {
+// 404 handler (API routes only — frontend routing is handled by Vercel)
+app.use("/api/*", (req, res) => {
   res.status(404).json({
     error: "Endpoint not found",
     path: req.path,
@@ -426,7 +400,7 @@ app.use((err, req, res, next) => {
 // START SERVER
 
 app.listen(PORT, () => {
-  // ...
+  console.log(`Server running on port ${PORT}`);
 });
 
 module.exports = app;
