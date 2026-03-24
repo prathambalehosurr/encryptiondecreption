@@ -65,6 +65,7 @@ async function loadEncryptionMethods() {
         const data = await response.json();
         
         if (methodSelect && data.methods) {
+            methodSelect.innerHTML = ''; // Clear default "Loading..." option
             data.methods.forEach(method => {
                 const option = document.createElement('option');
                 option.value = method.id;

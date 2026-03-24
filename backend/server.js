@@ -16,19 +16,8 @@ app.use(express.urlencoded({ extended: true, limit: "50mb" }));
 // Serve static files from frontend
 app.use(express.static(path.join(__dirname, "../frontEnd")));
 
-// Configure multer for file uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const uploadDir = path.join(__dirname, "uploads");
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    cb(null, `${Date.now()}-${file.originalname}`);
-  },
-});
+// Configure multer for memory storage (better for serverless/Vercel)
+const storage = multer.memoryStorage();
 
 const upload = multer({
   storage: storage,
@@ -306,14 +295,13 @@ app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
     }
 
     const { method = "aes", key, shift } = req.body;
-    const fileContent = fs.readFileSync(req.file.path, "utf8");
+    const fileContent = req.file.buffer.toString("utf8");
 
     let encrypted;
 
     switch (method.toLowerCase()) {
       case "aes":
         if (!key) {
-          fs.unlinkSync(req.file.path);
           return res.status(400).json({
             error: "Secret key is required for AES encryption",
           });
@@ -334,14 +322,12 @@ app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
         break;
 
       default:
-        fs.unlinkSync(req.file.path);
         return res.status(400).json({
           error: "Invalid encryption method",
         });
     }
 
-    // Clean up uploaded file
-    fs.unlinkSync(req.file.path);
+    // No cleanup needed for memory storage
 
     res.json({
       success: true,
@@ -351,9 +337,6 @@ app.post("/api/encrypt/file", upload.single("file"), (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
     res.status(500).json({
       error: error.message,
     });
@@ -371,14 +354,13 @@ app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
     }
 
     const { method = "aes", key, shift } = req.body;
-    const fileContent = fs.readFileSync(req.file.path, "utf8");
+    const fileContent = req.file.buffer.toString("utf8");
 
     let decrypted;
 
     switch (method.toLowerCase()) {
       case "aes":
         if (!key) {
-          fs.unlinkSync(req.file.path);
           return res.status(400).json({
             error: "Secret key is required for AES decryption",
           });
@@ -399,14 +381,12 @@ app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
         break;
 
       default:
-        fs.unlinkSync(req.file.path);
         return res.status(400).json({
           error: "Invalid decryption method",
         });
     }
 
-    // Clean up uploaded file
-    fs.unlinkSync(req.file.path);
+    // No cleanup needed for memory storage
 
     res.json({
       success: true,
@@ -416,9 +396,6 @@ app.post("/api/decrypt/file", upload.single("file"), (req, res) => {
       timestamp: new Date().toISOString(),
     });
   } catch (error) {
-    if (req.file) {
-      fs.unlinkSync(req.file.path);
-    }
     res.status(500).json({
       error: error.message,
     });
@@ -449,20 +426,7 @@ app.use((err, req, res, next) => {
 // START SERVER
 
 app.listen(PORT, () => {
-  console.log(`
-╔═══════════════════════════════════════════════════════╗
-║   🔐 Encryption/Decryption API Server                 
-║                                                       
-║   Server running on: http://localhost:${PORT}        
-║   API Endpoints:                                      
-║   - GET  /api/health          (Health check)         
-║   - GET  /api/methods         (Available methods)    
-║   - POST /api/encrypt         (Encrypt text)         
-║   - POST /api/decrypt         (Decrypt text)         
-║   - POST /api/encrypt/file    (Encrypt file)         
-║   - POST /api/decrypt/file    (Decrypt file)         
-║                                                       
-║   Frontend: http://localhost:${PORT}                 
-╚═══════════════════════════════════════════════════════╝
-    `);
+  // ...
 });
+
+module.exports = app;
